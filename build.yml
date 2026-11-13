@@ -1,0 +1,49 @@
+name: Build
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  plugin:
+    name: Plugin (Paper 1.21.11)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Build
+        run: mvn -B -ntp -Drevision=1.0.0-${{ github.run_number }} clean package
+
+      - name: Verify jar contents
+        run: |
+          jar=$(ls target/PyBridge-*.jar | head -n1)
+          echo "Built: $jar"
+          unzip -l "$jar" | grep -E "plugin.yml|config.yml|dev/pybridge/PyBridge.class"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PyBridge-plugin
+          path: target/PyBridge-*.jar
+          if-no-files-found: error
+
+  python:
+    name: Python client
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - run: python -m py_compile python/pybridge/__init__.py examples/example.py

@@ -1,0 +1,7 @@
+name: PyBridge
+version: '${project.version}'
+main: dev.pybridge.PyBridge
+api-version: '1.21'
+description: Выполнение команд сервера из Python
+website: https://github.com/YOUR_NAME/PyBridge
+authors: [YOUR_NAME]
